@@ -181,7 +181,8 @@ def generate_descriptions_task(task_id: str, project_id: str, ai_service,
 def generate_images_task(task_id: str, project_id: str, ai_service, file_service,
                         outline: List[Dict], use_template: bool = True, 
                         max_workers: int = 8, aspect_ratio: str = "16:9",
-                        resolution: str = "2K", app=None):
+                        resolution: str = "2K", app=None,
+                        extra_requirements: str = None):
     """
     Background task for generating page images
     Based on demo.py gen_images_parallel()
@@ -276,7 +277,8 @@ def generate_images_task(task_id: str, project_id: str, ai_service, file_service
                         # Generate image prompt
                         prompt = ai_service.generate_image_prompt(
                             outline, page_data, desc_text, page_index,
-                            has_material_images=has_material_images
+                            has_material_images=has_material_images,
+                            extra_requirements=extra_requirements
                         )
                         print(f"[DEBUG] Generated image prompt for page {page_id}")
                         

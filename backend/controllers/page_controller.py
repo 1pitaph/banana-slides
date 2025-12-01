@@ -354,7 +354,8 @@ def generate_page_image(project_id, page_id):
             page_data,
             desc_text,
             page.order_index + 1,
-            has_material_images=has_material_images
+            has_material_images=has_material_images,
+            extra_requirements=project.extra_requirements
         )
         
         # Generate image

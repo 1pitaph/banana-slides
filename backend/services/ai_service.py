@@ -210,7 +210,8 @@ class AIService:
     
     def generate_image_prompt(self, outline: List[Dict], page: Dict, 
                             page_desc: str, page_index: int, 
-                            has_material_images: bool = False) -> str:
+                            has_material_images: bool = False,
+                            extra_requirements: Optional[str] = None) -> str:
         """
         Generate image generation prompt for a page
         Based on demo.py gen_prompts()
@@ -221,6 +222,7 @@ class AIService:
             page_desc: Page description text
             page_index: Page number (1-indexed)
             has_material_images: 是否有素材图片（从项目描述中提取的图片）
+            extra_requirements: Optional extra requirements to apply to all pages
         
         Returns:
             Image generation prompt
@@ -242,6 +244,11 @@ class AIService:
                 "直接整合到生成的PPT页面中。请根据页面内容的需要，智能地选择和组合这些素材图片中的元素。"
             )
         
+        # 添加额外要求到提示词
+        extra_req_text = ""
+        if extra_requirements and extra_requirements.strip():
+            extra_req_text = f"\n\n额外要求（请务必遵循）：\n{extra_requirements}\n"
+        
         prompt = dedent(f"""\
         利用专业平面设计知识，根据参考图片的色彩与风格生成一页设计风格相同的ppt页面，作为整个ppt的其中一页，内容是:
         {page_desc}
@@ -251,7 +258,7 @@ class AIService:
         
         当前位于章节：{current_section}
         
-        要求文字清晰锐利，画面为4k分辨率 16:9比例.画面风格与配色保持严格一致。ppt使用全中文。{material_images_note}
+        要求文字清晰锐利，画面为4k分辨率 16:9比例.画面风格与配色保持严格一致。ppt使用全中文。{material_images_note}{extra_req_text}
         """)
         
         return prompt
@@ -277,7 +284,7 @@ class AIService:
             Exception with detailed error message if generation fails
         """
         try:
-            print(f"[DEBUG] Generating image with prompt (first 100 chars): {prompt[:500]}...")
+            print(f"[DEBUG] Generating image with prompt (first 100 chars): {prompt[:1000]}...")
             print(f"[DEBUG] Reference image: {ref_image_path}")
             if additional_ref_images:
                 print(f"[DEBUG] Additional reference images: {len(additional_ref_images)}")

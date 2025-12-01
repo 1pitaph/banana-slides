@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Sparkles } from 'lucide-react';
-import { Button, Loading, useToast, useConfirm } from '@/components/shared';
+import { Button, Loading, useToast, useConfirm, Textarea } from '@/components/shared';
 import { DescriptionCard } from '@/components/preview/DescriptionCard';
 import { useProjectStore } from '@/store/useProjectStore';
+import { updateProject } from '@/api/endpoints';
 
 export const DetailEditor: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +22,8 @@ export const DetailEditor: React.FC = () => {
   } = useProjectStore();
   const { show, ToastContainer } = useToast();
   const { confirm, ConfirmDialog } = useConfirm();
+  const [extraRequirements, setExtraRequirements] = useState<string>('');
+  const [isSavingRequirements, setIsSavingRequirements] = useState(false);
 
   // 加载项目数据
   useEffect(() => {
@@ -29,6 +32,13 @@ export const DetailEditor: React.FC = () => {
       syncProject(projectId);
     }
   }, [projectId, currentProject, syncProject]);
+
+  // 当项目加载后，初始化额外要求
+  useEffect(() => {
+    if (currentProject) {
+      setExtraRequirements(currentProject.extra_requirements || '');
+    }
+  }, [currentProject]);
 
   const handleGenerateAll = async () => {
     const hasDescriptions = currentProject?.pages.some(
@@ -84,6 +94,25 @@ export const DetailEditor: React.FC = () => {
         message: `生成失败: ${error.message || '未知错误'}`, 
         type: 'error' 
       });
+    }
+  };
+
+  const handleSaveExtraRequirements = async () => {
+    if (!currentProject || !projectId) return;
+    
+    setIsSavingRequirements(true);
+    try {
+      await updateProject(projectId, { extra_requirements: extraRequirements || '' });
+      // 更新本地项目状态
+      await syncProject(projectId);
+      show({ message: '额外要求已保存', type: 'success' });
+    } catch (error: any) {
+      show({ 
+        message: `保存失败: ${error.message || '未知错误'}`, 
+        type: 'error' 
+      });
+    } finally {
+      setIsSavingRequirements(false);
     }
   };
 
@@ -152,6 +181,33 @@ export const DetailEditor: React.FC = () => {
         </div>
       </header>
 
+      {/* 额外要求输入框 */}
+      <div className="bg-banana-50 border-b border-banana-100 px-6 py-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-start gap-4">
+            <div className="flex-1">
+              <Textarea
+                label="额外要求（将应用到每个页面的AI提示词）"
+                value={extraRequirements}
+                onChange={(e) => setExtraRequirements(e.target.value)}
+                placeholder="例如：使用简洁的设计风格，文字要清晰易读，配色要专业..."
+                rows={3}
+              />
+            </div>
+            <div className="pt-7">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleSaveExtraRequirements}
+                disabled={isSavingRequirements}
+              >
+                {isSavingRequirements ? '保存中...' : '保存'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* 操作栏 */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -192,15 +248,18 @@ export const DetailEditor: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {currentProject.pages.map((page, index) => (
-                <DescriptionCard
-                  key={page.id}
-                  page={page}
-                  index={index}
-                  onUpdate={(data) => updatePageLocal(page.id, data)}
-                  onRegenerate={() => handleRegeneratePage(page.id)}
-                />
-              ))}
+              {currentProject.pages.map((page, index) => {
+                const pageId = page.id || page.page_id;
+                return (
+                  <DescriptionCard
+                    key={pageId}
+                    page={page}
+                    index={index}
+                    onUpdate={(data) => updatePageLocal(pageId, data)}
+                    onRegenerate={() => handleRegeneratePage(pageId)}
+                  />
+                );
+              })}
             </div>
           )}
         </div>

@@ -49,6 +49,7 @@ export interface Project {
   project_id: string;  // 后端返回 project_id
   id?: string;         // 前端使用的别名
   idea_prompt: string;
+  extra_requirements?: string; // 额外要求，应用到每个页面的AI提示词
   creation_type?: string;
   template_image_url?: string; // 后端返回 template_image_url
   template_image_path?: string; // 前端使用的别名

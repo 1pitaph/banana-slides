@@ -123,6 +123,10 @@ def update_project(project_id):
         if 'idea_prompt' in data:
             project.idea_prompt = data['idea_prompt']
         
+        # Update extra_requirements if provided
+        if 'extra_requirements' in data:
+            project.extra_requirements = data['extra_requirements']
+        
         # Update page order if provided
         if 'pages_order' in data:
             pages_order = data['pages_order']
@@ -414,7 +418,8 @@ def generate_images(project_id):
             max_workers,
             current_app.config['DEFAULT_ASPECT_RATIO'],
             current_app.config['DEFAULT_RESOLUTION'],
-            app
+            app,
+            project.extra_requirements
         )
         
         # Update project status
